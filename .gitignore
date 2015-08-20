@@ -1,0 +1,10 @@
+*.class
+*.log
+
+# sbt specific
+.cache
+.lib/
+dist/*
+target/
+project/boot/
+project/plugins/project/

@@ -1,0 +1,11 @@
+# docker-compose up
+queue1:
+  image: rabbitmq:3-management
+  ports:
+  - "5001:5672"
+  - "6001:15672"
+queue2:
+  image: rabbitmq:3-management
+  ports:
+  - "5002:5672"
+  - "6002:15672"
