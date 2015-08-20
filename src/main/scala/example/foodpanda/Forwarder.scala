@@ -7,13 +7,11 @@ import akka.camel._
 import scala.concurrent.duration._
 
 object Forwarder {
-  val numberOfWorkers = 10
-  val inputQueue = "rabbitmq://docker:5001/test?queue=testqueue&durable=false&autoDelete=false&autoAck=false"
-  val outputQueue = "rabbitmq://docker:5002/test?queue=testqueue&durable=false&autoDelete=false&autoAck=false"
+  val input = "rabbitmq://docker:5001/test?queue=testqueue&durable=false&autoDelete=false&autoAck=false"
+  val output = "rabbitmq://docker:5002/test?queue=testqueue&durable=false&autoDelete=false&autoAck=false"
 
   def main(args: Array[String]): Unit = {
     val system = ActorSystem("throttler")
-    
     val queueProducer = system.actorOf(Props(classOf[QueueProducer]))
     val throttler = system.actorOf(Props(classOf[TimerBasedThrottler], 100 msgsPer 1.second))
     throttler ! SetTarget(Some(queueProducer))
@@ -22,14 +20,13 @@ object Forwarder {
   }
 
   class ThrottleController(throttler: ActorRef) extends Consumer {
+    val regex = """rate=(\d+)""".r 
     def endpointUri = "jetty:http://0.0.0.0:9999/throttle"
-    def setThrottle(rate: Int) = throttler ! SetRate(rate msgsPer 1.second)
     
     def receive = {
       case msg: CamelMessage =>
         if (msg.body != null) {
-          val body = msg.bodyAs[String]
-          val size = """rate=(\d+)""".r.findFirstMatchIn(body) match {
+          regex.findFirstMatchIn(msg.bodyAs[String]) match {
             case Some(ma) =>
               val rate = ma.group(1).toInt
               throttler ! SetRate(rate msgsPer 1.second)
@@ -42,7 +39,7 @@ object Forwarder {
   }
 
   class QueueConsumer(producer: ActorRef) extends Consumer {
-    def endpointUri = inputQueue 
+    def endpointUri = input 
     override def autoAck = false
 
     def receive = {
@@ -54,7 +51,7 @@ object Forwarder {
   }
 
   class QueueProducer extends Actor with Producer {
-    def endpointUri = outputQueue
+    def endpointUri = output
 
     override def routeResponse(msg: Any): Unit = {
       sender forward Ack

@@ -12,6 +12,7 @@ Speed can be dynamically controlled via http endpoint.
 
 <img width="612" alt="screenshot 2015-08-20 18 55 39" src="https://cloud.githubusercontent.com/assets/5654118/9393525/b2f69f60-4782-11e5-96b7-73eeea405331.png">
 
+# Try
 
 Install docker/docker-compose and sbt (brew install sbt). Run the app:
 ```
